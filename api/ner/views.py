@@ -20,5 +20,7 @@ def tag_entities(request, encoded_text: str) -> JsonResponse:
         entities.append({
             'text': ent.text,
             'label': ent.label_,
+            'start': ent.start_char,
+            'end': ent.end_char
         })
     return JsonResponse(entities, safe=False)
