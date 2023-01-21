@@ -1,19 +1,20 @@
-from django.shortcuts import render
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 import spacy
-import base64
+
+nlp = spacy.load("en_core_web_trf") # change to "en_core_web_sm" if too slow
 
 # Create your views here.
 
-def decode_base64(encoded_text: str) -> str:
-    """Decode base64 encoded text and return decoded text as string."""
-    return base64.b64decode(encoded_text).decode('utf-8')
-
-def tag_entities(request, encoded_text: str) -> JsonResponse:
+@csrf_exempt
+def tag_entities(request) -> JsonResponse:
     """Tag entities in given text (given in base64 encoding) and return tagged entities in JSON."""
-    text = decode_base64(encoded_text)
-    nlp = spacy.load("en_core_web_sm")
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST requests are allowed.'}, status=405)
+    
+    text = request.body.decode('utf-8')
+    # print(text)
     doc = nlp(text)
     entities = []
     for ent in doc.ents:
@@ -23,4 +24,5 @@ def tag_entities(request, encoded_text: str) -> JsonResponse:
             'start': ent.start_char,
             'end': ent.end_char
         })
-    return JsonResponse(entities, safe=False)
+    response = JsonResponse(entities, safe=False)
+    return response
